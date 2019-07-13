@@ -5,16 +5,16 @@ import (
 	"crypto/rand"
 	"database/sql"
 	"encoding/base64"
-	"fmt"
+	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
-	"html/template"
 	"net/http"
-	"time"
+
 )
-type Welcome struct {
-	Name string
-	Time string
+type link struct {
+	short,large string
+	id   int
 }
+
 func GenerateRandomString(s int) (string, error) {
 	b, err := GenerateRandomBytes(s)
 	return base64.URLEncoding.EncodeToString(b), err
@@ -30,75 +30,64 @@ func GenerateRandomBytes(n int) ([]byte, error) {
 	return b, nil
 }
 
-func main() {
-
-	welcome := Welcome{"PranithKampelly", time.Now().Format(time.Stamp)}
-
-
-	templates := template.Must(template.ParseFiles("template/welcome-template.html"))
-
-	http.HandleFunc("/" , func(w http.ResponseWriter, r *http.Request) {
-
-		if err := templates.ExecuteTemplate(w, "welcome-template.html", welcome); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-	})
-	http.HandleFunc("/new" , func(w http.ResponseWriter, r *http.Request) {
-		err := r.ParseForm()
-		if err != nil {
-			panic(err)
-		}
-		largelink := r.Form.Get("largelink")
+func getting(c *gin.Context) {
+	c.HTML(http.StatusOK, "welcome-template.html", gin.H{})
+}
+func posting(c *gin.Context) {
+	largelink:= c.PostForm("largelink")
+	db, err := sql.Open("mysql", "root:pranithkampelly@tcp(127.0.0.1:3306)/url")
+	if err != nil {
+		panic(err.Error())
+	}
+	defer db.Close()
+	v, _ := db.Query("SELECT short FROM links WHERE  large =?",largelink )
 
 
-		db, err := sql.Open("mysql", "root:pranithkampelly@tcp(127.0.0.1:3306)/url")
+	if(!v.Next()) {
+		p,_ := GenerateRandomString(6)
+		shortlink := "http://0.0.0.0:8080/"+p
 
-		// if there is an error opening the connection, handle it
+		_, err = db.Query("INSERT INTO links (large,short) VALUES (?,?)", largelink, shortlink)
+
+		// if there is an error inserting, handle it
 		if err != nil {
 			panic(err.Error())
 		}
+		c.HTML(http.StatusOK, "url_display.html", gin.H{"shortlink":shortlink})
 
-		// defer the close till after the main function has finished
-		// executing
+	} else {
+		var p link
+		err = db.QueryRow("select id,large,short from links WHERE large =?",largelink).Scan(&p.id, &p.large, &p.short)
 
-
-		defer db.Close()
-
-
-
-		v, _ := db.Query("SELECT * FROM links WHERE  large =?",largelink )
-
-		if(!v.Next()) {
-			p,_ := GenerateRandomString(6)
-			shortlink := "http://0.0.0.0:8080/"+p
-
-			_, err = db.Query("INSERT INTO links (large,short) VALUES (?,?)", largelink, shortlink)
-
-			// if there is an error inserting, handle it
-			if err != nil {
-				panic(err.Error())
-			}
-
-			template2 := template.Must(template.ParseFiles("template/url_display.html"))
-			data := struct {
-				AppVersion string
-			}{
-				AppVersion: shortlink ,
-			}
-			if err := template2.ExecuteTemplate(w, "url_display.html",data); err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-		} else {
-			template1 := template.Must(template.ParseFiles("template/display.html"))
-			if err := template1.ExecuteTemplate(w, "display.html", welcome); err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-		}
-
-		// be careful deferring Queries if you are using transactions
-
-
-	})
-	fmt.Println("Listening");
-	fmt.Println(http.ListenAndServe(":8080", nil));
+		c.HTML(http.StatusOK, "display.html", gin.H{"url":p.short})
+	}
 }
+
+func token(c *gin.Context) {
+	token := c.Param("token")
+	shortlink := "http://0.0.0.0:8080/" + token
+	db, err := sql.Open("mysql", "root:pranithkampelly@tcp(127.0.0.1:3306)/url")
+	if err != nil {
+		panic(err.Error())
+	}
+	defer db.Close()
+	var p link
+	err = db.QueryRow("select id,large,short from links WHERE short =?",shortlink).Scan(&p.id, &p.large, &p.short)
+	 if(err!=nil) {
+	 	c.HTML(http.StatusOK, "error.html", gin.H{})
+	 } else {
+		 c.Redirect(301, p.large)
+	 }
+
+}
+
+func main() {
+		router := gin.Default()
+		router.LoadHTMLGlob("template/*")
+		router.GET("/", getting)
+		router.POST("/new",posting)
+	    router.GET("/:token",token )
+	    router.Run(":8080")
+
+
+	}
