@@ -1,6 +1,5 @@
 package main
 
-
 import (
 	"crypto/rand"
 	"database/sql"
@@ -8,11 +7,10 @@ import (
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"net/http"
-
 )
 type link struct {
 	short,large,custom string
-	id   int
+	id,count   int
 }
 
 func GenerateRandomString(s int) (string, error) {
@@ -72,10 +70,14 @@ func token(c *gin.Context) {
 	}
 	defer db.Close()
 	var p link
-	err = db.QueryRow("select id,large,short from links WHERE short =?",shortlink).Scan(&p.id, &p.large, &p.short)
-	 if(err!=nil) {
+	err = db.QueryRow("select id,large,short,count_id from links WHERE short =?",shortlink).Scan(&p.id, &p.large, &p.short,&p.count)
+
+	db.Query( "UPDATE links SET count_id=?  WHERE id=?",p.count+1,p.id)
+
+	if(err!=nil) {
 	 	c.HTML(http.StatusOK, "error.html", gin.H{})
 	 } else {
+
 		 c.Redirect(301, p.large)
 	 }
 
@@ -93,34 +95,35 @@ func custom_new(c *gin.Context) {
 	defer db.Close()
 	v, _ := db.Query("SELECT short FROM links WHERE  large =?",largelink )
 	if(!v.Next()) {
-		p,_ := GenerateRandomString(6)
-		shortlink := "http://0.0.0.0:8080/new/"+p
-		customlink := c.PostForm("customlink")
+		//p,_ := GenerateRandomString(6)
+		shortlink := "http://0.0.0.0:8080/new/"+c.PostForm("customlink")
+		//customlink := c.PostForm("customlink")
 
 		_, err = db.Query("INSERT INTO links (large,short) VALUES (?,?)", largelink, shortlink)
-		_, err = db.Query("INSERT INTO custom_links (large,short,custom) VALUES (?,?,?)", largelink, shortlink,customlink)
+		//_, err = db.Query("INSERT INTO custom_links (large,short,custom) VALUES (?,?,?)", largelink, shortlink,customlink)
 
 
 		// if there is an error inserting, handle it
 		if err != nil {
 			panic(err.Error())
 		}
-		c.HTML(http.StatusOK, "url_display.html", gin.H{"shortlink":customlink})
+		c.HTML(http.StatusOK, "url_display.html", gin.H{"shortlink":shortlink})
 
 	} else {
 		var p link
-		err = db.QueryRow("select id,large,short,custom from custom_links WHERE large =?",largelink).Scan(&p.id, &p.large, &p.short,&p.custom)
+		err = db.QueryRow("select id,large,short from links WHERE large =?",largelink).Scan(&p.id, &p.large, &p.short)
 
 		c.HTML(http.StatusOK, "display.html", gin.H{"url":p.short})
 	}
 }
 func main() {
-		router := gin.Default()
-		router.LoadHTMLGlob("template/*")
-		router.GET("/", getting)
-		//router.GET("/custom", custom)
+
+		router := gin.Default() //Initiating gin framework
+		router.LoadHTMLGlob("template/*") //this is direct html request to templete folder
+		router.GET("/", getting)// Displays the
+		router.GET("/custom", custom)
 		router.POST("/new",posting)
-		//router.POST("/custom/new", custom_new)
+		router.POST("/custom/new", custom_new)
 	    router.GET("/new/:token",token )
 	    router.Run(":8080")
 
