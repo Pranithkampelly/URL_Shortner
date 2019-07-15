@@ -1,5 +1,7 @@
 <!DOCTYPE html>
-<html lang="en">
+
+<html>
+
 <style>
     input[type=text], select {
         width: 100%;
@@ -34,22 +36,23 @@
 </style>
 <head>
     <meta charset="UTF-8">
-    <title>Custom</title>
+    <link rel="stylesheet" href="/static/stylesheets/welcome-template.css">
+
+    <!-- The welcome struct
+(shown in the main.go code) is received within the HTML and we just need to use the . operator and retrieve the information we want -->
+    <title>Bulkupload</title>
 </head>
 <body>
-<form action="/custom/new" method="post">
-    Large_link:<br>
-    <input type="text" name="largelink" placeholder="link"><br>
-    CustomPart:<br>
-    <input type="text" name="customlink" placeholder="Customized_part"><br>
+
+
+<form action="bulk/new" method="post">
+    <h1>Select Bulk file: </h1>
+    Select files: <input type="file" name="myFile" multiple><br><br>
     <input type="submit" value="Submit">
 </form>
-<h1>Note:</h1>
+<br>
 
-Your customized url will be http://0.0.0.0:8089/new/{customized part}
-<br>
-Customized part should be only one string and should not contain "/" in the string.
-<br>
-Only fill the customized part in the space provided.
+
+
 </body>
 </html>

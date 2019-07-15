@@ -13,7 +13,7 @@ type link struct {
 
 func Token(c *gin.Context) {
 	token := c.Param("token")
-	shortlink := "http://0.0.0.0:8080/new/" + token
+	shortlink := "http://0.0.0.0:8089/new/" + token
 	db, err := sql.Open("mysql", "root:pranithkampelly@tcp(127.0.0.1:3306)/url")
 	if err != nil {
 		panic(err.Error())

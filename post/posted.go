@@ -23,7 +23,7 @@ func Posting(c *gin.Context) {
 
 	if(!v.Next()) {
 		p,_ := pakages.GenerateRandomString(6)
-		shortlink := "http://0.0.0.0:8080/new/"+p
+		shortlink := "http://0.0.0.0:8089/new/"+p
 
 		_, err = db.Query("INSERT INTO links (large,short) VALUES (?,?)", largelink, shortlink)
 
