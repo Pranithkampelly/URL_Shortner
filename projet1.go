@@ -105,9 +105,13 @@ func custom_new(c *gin.Context) {
 
 		// if there is an error inserting, handle it
 		if err != nil {
-			panic(err.Error())
+			c.HTML(http.StatusOK, "error1.html", gin.H{})
+
+			//panic(err.Error())
+
+		} else {
+			c.HTML(http.StatusOK, "url_display.html", gin.H{"shortlink": shortlink})
 		}
-		c.HTML(http.StatusOK, "url_display.html", gin.H{"shortlink":shortlink})
 
 	} else {
 		var p link
@@ -116,16 +120,20 @@ func custom_new(c *gin.Context) {
 		c.HTML(http.StatusOK, "display.html", gin.H{"url":p.short})
 	}
 }
+func home(c *gin.Context) {
+	c.HTML(http.StatusOK, "root.html", gin.H{})
+}
+
 func main() {
 
 		router := gin.Default() //Initiating gin framework
 		router.LoadHTMLGlob("template/*") //this is direct html request to templete folder
-		router.GET("/", getting)// Displays the
+		router.GET("/", home)
+		router.GET("/short", getting)// Displays the form to generate short url  and a link to custom url generation
 		router.GET("/custom", custom)
 		router.POST("/new",posting)
 		router.POST("/custom/new", custom_new)
 	    router.GET("/new/:token",token )
 	    router.Run(":8080")
-
 
 	}
