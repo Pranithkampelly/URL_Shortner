@@ -11,7 +11,7 @@ import (
 
 )
 type link struct {
-	short,large string
+	short,large,custom string
 	id   int
 }
 
@@ -45,7 +45,7 @@ func posting(c *gin.Context) {
 
 	if(!v.Next()) {
 		p,_ := GenerateRandomString(6)
-		shortlink := "http://0.0.0.0:8080/"+p
+		shortlink := "http://0.0.0.0:8080/new/"+p
 
 		_, err = db.Query("INSERT INTO links (large,short) VALUES (?,?)", largelink, shortlink)
 
@@ -65,7 +65,7 @@ func posting(c *gin.Context) {
 
 func token(c *gin.Context) {
 	token := c.Param("token")
-	shortlink := "http://0.0.0.0:8080/" + token
+	shortlink := "http://0.0.0.0:8080/new/" + token
 	db, err := sql.Open("mysql", "root:pranithkampelly@tcp(127.0.0.1:3306)/url")
 	if err != nil {
 		panic(err.Error())
@@ -81,12 +81,47 @@ func token(c *gin.Context) {
 
 }
 
+func custom(c *gin.Context) {
+	c.HTML(http.StatusOK, "custom.html", gin.H{})
+}
+func custom_new(c *gin.Context) {
+	largelink:= c.PostForm("largelink")
+	db, err := sql.Open("mysql", "root:pranithkampelly@tcp(127.0.0.1:3306)/url")
+	if err != nil {
+		panic(err.Error())
+	}
+	defer db.Close()
+	v, _ := db.Query("SELECT short FROM links WHERE  large =?",largelink )
+	if(!v.Next()) {
+		p,_ := GenerateRandomString(6)
+		shortlink := "http://0.0.0.0:8080/new/"+p
+		customlink := c.PostForm("customlink")
+
+		_, err = db.Query("INSERT INTO links (large,short) VALUES (?,?)", largelink, shortlink)
+		_, err = db.Query("INSERT INTO custom_links (large,short,custom) VALUES (?,?,?)", largelink, shortlink,customlink)
+
+
+		// if there is an error inserting, handle it
+		if err != nil {
+			panic(err.Error())
+		}
+		c.HTML(http.StatusOK, "url_display.html", gin.H{"shortlink":customlink})
+
+	} else {
+		var p link
+		err = db.QueryRow("select id,large,short,custom from custom_links WHERE large =?",largelink).Scan(&p.id, &p.large, &p.short,&p.custom)
+
+		c.HTML(http.StatusOK, "display.html", gin.H{"url":p.short})
+	}
+}
 func main() {
 		router := gin.Default()
 		router.LoadHTMLGlob("template/*")
 		router.GET("/", getting)
+		//router.GET("/custom", custom)
 		router.POST("/new",posting)
-	    router.GET("/:token",token )
+		//router.POST("/custom/new", custom_new)
+	    router.GET("/new/:token",token )
 	    router.Run(":8080")
 
 
