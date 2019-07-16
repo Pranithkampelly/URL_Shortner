@@ -3,6 +3,42 @@
 <html>
 
 <style>
+    .navbar {
+        overflow: hidden;
+        background-color: #33C1FF;
+        position: sticky;
+        position: -webkit-sticky;
+        top: 0;
+    }
+
+    /* Style the navigation bar links */
+    .navbar a {
+        float: left;
+        display: block;
+        color: white;
+        text-align: center;
+        padding: 14px 20px;
+        text-decoration: none;
+    }
+
+
+    /* Right-aligned link */
+    .navbar a.right {
+        float: right;
+    }
+
+    /* Change color on hover */
+    .navbar a:hover {
+        background-color: #ddd;
+        color: black;
+    }
+
+    /* Active/current link */
+    .navbar a.active {
+        background-color: #666;
+        color: white;
+    }
+
     input[type=text], select {
         width: 100%;
         padding: 12px 20px;
@@ -43,7 +79,12 @@
     <title>Bulkupload</title>
 </head>
 <body>
-
+<nav class="navbar">
+    <a href=http://0.0.0.0:8089 class="w3-button w3-bar-item">Home  </a>
+    <a href=http://0.0.0.0:8089/custom class="w3-button w3-bar-item">Generate custom url  </a>
+    <a href=http://0.0.0.0:8089/short class="w3-button w3-bar-item">Generate short url  </a>
+    <a href=http://0.0.0.0:8089/bulk class="w3-button w3-bar-item"> Generate bulk short url's  </a>
+</nav>
 
 <form action="bulk/new" enctype="multipart/form-data" method="post">
     <h1>Select Bulk file: </h1>
