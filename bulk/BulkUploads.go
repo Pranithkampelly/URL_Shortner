@@ -18,8 +18,9 @@ type link struct {
 func Upload(c *gin.Context) {
 
 	file, err := c.FormFile("myFile")
+
 	if err != nil {
-		log.Fatal(err)
+		c.String(http.StatusOK, fmt.Sprint("'please upload file"))
 	}
 	log.Println(file.Filename)
 

@@ -12,7 +12,6 @@ import (
 
 
 func main() {
-
 		router := gin.Default() //Initiating gin framework
 		router.LoadHTMLGlob("template/*") //this is direct html request to templete folder
 		router.GET("/", Home)
@@ -24,5 +23,4 @@ func main() {
 		router.GET("/bulk", Bulkupload)
 		router.POST("/bulk/new", Upload)
 	    router.Run(":8089")
-
 	}
