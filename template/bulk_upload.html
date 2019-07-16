@@ -79,21 +79,23 @@
 (shown in the main.go code) is received within the HTML and we just need to use the . operator and retrieve the information we want -->
     <title>Bulkupload</title>
 </head>
-<body>
+<h5>
 <nav class="navbar">
     <a href=http://0.0.0.0:8089 class="w3-button w3-bar-item">Home  </a>
     <a href=http://0.0.0.0:8089/custom class="w3-button w3-bar-item">Generate custom url  </a>
     <a href=http://0.0.0.0:8089/short class="w3-button w3-bar-item">Generate short url  </a>
     <a href=http://0.0.0.0:8089/bulk class="w3-button w3-bar-item"> Generate bulk short url's  </a>
 </nav>
-
+<br>
+<br>
 <form action="bulk/new" enctype="multipart/form-data" method="post">
     <h1>Select Bulk file: </h1>
     Select files: <input type="file" name="myFile" multiple><br><br>
     <input type="submit" value="Submit">
 </form>
 <br>
-
+<h2> You can only upload .txt files </h2>
+<h2>Each large url should be seperated by newline </h2>
 
 
 </body>
