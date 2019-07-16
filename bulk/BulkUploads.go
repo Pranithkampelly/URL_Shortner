@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"database/sql"
 	"fmt"
-
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
@@ -16,9 +15,10 @@ import (
 var wg sync.WaitGroup
 
 
-  func scanning(scanner *bufio.Scanner){
+  func scanning(scaning string ){
 
-	  link_large := scanner.Text()
+	  link_large := scaning
+	  fmt.Println(link_large)
 	  db, err := sql.Open("mysql", "root:pranithkampelly@tcp(127.0.0.1:3306)/url")
 	  if err != nil {
 		  panic(err.Error())
@@ -64,16 +64,18 @@ var wg sync.WaitGroup
 	  if err != nil {
 		  log.Fatal(err)
 	  }
+
 	  defer file1.Close()
 
 	  scanner := bufio.NewScanner(file1)
+
 	  for scanner.Scan() {
-	  	wg.Add(1)
-	  	go scanning(scanner)
+		  wg.Add(1)
+	  	go scanning(scanner.Text())
 
 	  }
 	  if err := scanner.Err(); err != nil {
 		  log.Fatal(err)
 	  }
-	  wg.Wait()
+	 wg.Wait()
   }

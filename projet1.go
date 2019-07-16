@@ -10,7 +10,6 @@ import (
 	. "url_shortner_copy/taken_url"
 )
 
-
 func main() {
 		router := gin.Default() //Initiating gin framework
 		router.LoadHTMLGlob("template/*") //this is direct html request to templete folder
