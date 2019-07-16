@@ -4,12 +4,8 @@ import (
 	"database/sql"
 	"github.com/gin-gonic/gin"
 	"net/http"
-
+   ."url_shortner_copy/Models"
 )
-type link struct {
-	short,large,custom string
-	id,count   int
-}
 
 func Custom_new(c *gin.Context) {
 	largelink:= c.PostForm("largelink")
@@ -21,7 +17,7 @@ func Custom_new(c *gin.Context) {
 	v, _ := db.Query("SELECT short FROM links WHERE  large =?",largelink )
 	if(!v.Next()) {
 		//p,_ := GenerateRandomString(6)
-		shortlink := "http://0.0.0.0:8080/new/"+c.PostForm("customlink")
+		shortlink := "http://0.0.0.0:8089/new/"+c.PostForm("customlink")
 		//customlink := c.PostForm("customlink")
 
 		_, err = db.Query("INSERT INTO links (large,short) VALUES (?,?)", largelink, shortlink)
@@ -39,9 +35,9 @@ func Custom_new(c *gin.Context) {
 		}
 
 	} else {
-		var p link
-		err = db.QueryRow("select id,large,short from links WHERE large =?",largelink).Scan(&p.id, &p.large, &p.short)
+		var p Link
+		err = db.QueryRow("select id,large,short from links WHERE large =?",largelink).Scan(&p.Id, &p.Large, &p.Short)
 
-		c.HTML(http.StatusOK, "display.html", gin.H{"url":p.short})
+		c.HTML(http.StatusOK, "display.html", gin.H{"url":p.Short})
 	}
 }

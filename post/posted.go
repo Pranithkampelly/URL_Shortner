@@ -5,11 +5,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"url_shortner_copy/pakages"
+	."url_shortner_copy/Models"
 )
-type link struct {
-	short,large,custom string
-	id,count   int
-}
 
 func Posting(c *gin.Context) {
 	largelink:= c.PostForm("largelink")
@@ -34,9 +31,9 @@ func Posting(c *gin.Context) {
 		c.HTML(http.StatusOK, "url_display.html", gin.H{"shortlink":shortlink})
 
 	} else {
-		var p link
-		err = db.QueryRow("select id,large,short from links WHERE large =?",largelink).Scan(&p.id, &p.large, &p.short)
+		var p Link
+		err = db.QueryRow("select id,large,short from links WHERE large =?",largelink).Scan(&p.Id, &p.Large, &p.Short)
 
-		c.HTML(http.StatusOK, "display.html", gin.H{"url":p.short})
+		c.HTML(http.StatusOK, "display.html", gin.H{"url":p.Short})
 	}
 }

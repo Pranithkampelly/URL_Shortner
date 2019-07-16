@@ -4,72 +4,76 @@ import (
 	"bufio"
 	"database/sql"
 	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
 	"os"
+	"sync"
+	. "url_shortner_copy/Models"
 	"url_shortner_copy/pakages"
 )
+var wg sync.WaitGroup
 
-type link struct {
-	short,large,custom string
-	id,count   int
-}
-func Upload(c *gin.Context) {
 
-	file, err := c.FormFile("myFile")
+  func scanning(scanner *bufio.Scanner){
 
-	if err != nil {
-		c.String(http.StatusOK, fmt.Sprint("'please upload file"))
-	}
-	log.Println(file.Filename)
+	  link_large := scanner.Text()
+	  db, err := sql.Open("mysql", "root:pranithkampelly@tcp(127.0.0.1:3306)/url")
+	  if err != nil {
+		  panic(err.Error())
+	  }
+	  defer db.Close()
+	  v, _ := db.Query("SELECT short FROM links WHERE  large =?", link_large)
 
-	err = c.SaveUploadedFile(file, "saved/"+file.Filename)
-	if err != nil {
-		log.Fatal(err)
-	}
-	c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", file.Filename))
+	  if (!v.Next()) {
+		  p, _ := pakages.GenerateRandomString(6)
+		  shortlink := "http://0.0.0.0:8089/new/" + p
 
-	file1, err := os.Open("saved/" + file.Filename)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer file1.Close()
+		  _, err = db.Query("INSERT INTO links (large,short) VALUES (?,?)", link_large, shortlink)
 
-	scanner := bufio.NewScanner(file1)
+		  // if there is an error inserting, handle it
+		  if err != nil {
+			  panic(err.Error())
+		  }
 
-	
+	  } else {
+		  var p Link
+		  err = db.QueryRow("select id,large,short from links WHERE large =?", link_large).Scan(&p.Id, &p.Large, &p.Short)
 
-	
+	  }
+	  wg.Done()
+  }
+  func Upload(c *gin.Context) {
 
-	for scanner.Scan() {
-		fmt.Println("entered")
-		link_large := scanner.Text()
-		db, err := sql.Open("mysql", "root:pranithkampelly@tcp(127.0.0.1:3306)/url")
-		if err != nil {
-			panic(err.Error())
-		}
-		defer db.Close()
-		v, _ := db.Query("SELECT short FROM links WHERE  large =?", link_large)
+	  file, err := c.FormFile("myFile")
 
-		if (!v.Next()) {
-			p, _ := pakages.GenerateRandomString(6)
-			shortlink := "http://0.0.0.0:8089/new/" + p
+	  if err != nil {
 
-			_, err = db.Query("INSERT INTO links (large,short) VALUES (?,?)", link_large, shortlink)
+		  c.String(http.StatusOK, fmt.Sprint("'please upload file"))
+	  }
+	  log.Println(file.Filename)
 
-			// if there is an error inserting, handle it
-			if err != nil {
-				panic(err.Error())
-			}
+	  err = c.SaveUploadedFile(file, "saved/"+file.Filename)
+	  if err != nil {
+		  log.Fatal(err)
+	  }
+	  c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", file.Filename))
 
-		} else {
-			var p link
-			err = db.QueryRow("select id,large,short from links WHERE large =?", link_large).Scan(&p.id, &p.large, &p.short)
+	  file1, err := os.Open("saved/" + file.Filename)
+	  if err != nil {
+		  log.Fatal(err)
+	  }
+	  defer file1.Close()
 
-		}
-	}
-	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
-	}
-}
+	  scanner := bufio.NewScanner(file1)
+	  for scanner.Scan() {
+	  	wg.Add(1)
+	  	go scanning(scanner)
+
+	  }
+	  if err := scanner.Err(); err != nil {
+		  log.Fatal(err)
+	  }
+	  wg.Wait()
+  }
